@@ -96,6 +96,7 @@ from flask import Flask
 app = Flask(__name__)
 
 def run_bot():
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
     app = ApplicationBuilder().token(token).build()
     app.add_handler(CommandHandler("set_interests", set_interests))
     app.add_handler(CommandHandler("event", recommend_event))
