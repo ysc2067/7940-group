@@ -90,5 +90,25 @@ def main():
 
     app.run_polling()
 
+import threading
+from flask import Flask
+
+app = Flask(__name__)
+
+def run_bot():
+    app = ApplicationBuilder().token(token).build()
+    app.add_handler(CommandHandler("set_interests", set_interests))
+    app.add_handler(CommandHandler("event", recommend_event))
+    app.add_handler(CommandHandler("create_group", create_group))
+    app.add_handler(CommandHandler("join_group", join_group))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+    app.run_polling()
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
 if __name__ == "__main__":
-    main()
+    threading.Thread(target=run_bot).start()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
