@@ -77,39 +77,31 @@ async def join_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hello! I'm your COMP7940 chatbot. Try typing something or use /set_interests")
 
-def main():
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    app = ApplicationBuilder().token(token).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("set_interests", set_interests))
-    app.add_handler(CommandHandler("event", recommend_event))
-    app.add_handler(CommandHandler("create_group", create_group))
-    app.add_handler(CommandHandler("join_group", join_group))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-
-    app.run_polling()
-
-import threading
+import asyncio
 from flask import Flask
+from threading import Thread
 
 app = Flask(__name__)
 
-def run_bot():
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    app = ApplicationBuilder().token(token).build()
-    app.add_handler(CommandHandler("set_interests", set_interests))
-    app.add_handler(CommandHandler("event", recommend_event))
-    app.add_handler(CommandHandler("create_group", create_group))
-    app.add_handler(CommandHandler("join_group", join_group))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-    app.run_polling()
-
-@app.route('/')
+@app.route("/")
 def home():
     return "Bot is running!"
 
+async def run_bot():
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    app_ = ApplicationBuilder().token(token).build()
+    app_.add_handler(CommandHandler("start", start))
+    app_.add_handler(CommandHandler("set_interests", set_interests))
+    app_.add_handler(CommandHandler("event", recommend_event))
+    app_.add_handler(CommandHandler("create_group", create_group))
+    app_.add_handler(CommandHandler("join_group", join_group))
+    app_.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+    await app_.run_polling()
+
+def start_bot():
+    asyncio.run(run_bot())
+
 if __name__ == "__main__":
-    threading.Thread(target=run_bot).start()
+    Thread(target=start_bot).start()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
 
