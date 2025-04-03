@@ -80,12 +80,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 import asyncio
 from flask import Flask
 from threading import Thread
+import os
+
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
     return "Bot is running!"
+
+async def run_flask():
+    from hypercorn.asyncio import serve
+    from hypercorn.config import Config
+
+    config = Config()
+    config.bind = [f"0.0.0.0:{os.environ.get('PORT', 10000)}"]
+    await serve(app, config)
 
 async def run_bot():
     token = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -98,10 +109,13 @@ async def run_bot():
     app_.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     await app_.run_polling()
 
-def start_bot():
-    asyncio.run(run_bot())
+async def main():
+    await asyncio.gather(
+        run_bot(),
+        run_flask()
+    )
 
 if __name__ == "__main__":
-    Thread(target=start_bot).start()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    asyncio.run(main())
+
 
